@@ -1,53 +1,45 @@
 <?php
-include 'db_connect.php'; // Ensure this path is correct
+include 'db_connect.php'; // Include database connection file
+session_start(); // Start the session
 
 echo "<h1>Search Results</h1>";
 
-// Check for POST data and sanitize it
-$product_name = isset($_POST['product_name']) ? $conn->real_escape_string($_POST['product_name']) : '';
-$city = isset($_POST['city']) ? $conn->real_escape_string($_POST['city']) : '';
-$min_quantity = isset($_POST['min_quantity']) ? (int) $_POST['min_quantity'] : 0;
-$max_quantity = isset($_POST['max_quantity']) ? (int) $_POST['max_quantity'] : PHP_INT_MAX;
-$min_price = isset($_POST['min_price']) ? (float) $_POST['min_price'] : 0.0;
-$max_price = isset($_POST['max_price']) ? (float) $_POST['max_price'] : PHP_INT_MAX;
-
+// Construct the query
 $query = "SELECT * FROM products WHERE 1=1";
-
-// Append conditions based on the user input
-if (!empty($product_name)) {
-    $query .= " AND name LIKE '%" . $product_name . "%'";
+if (!empty($_SESSION['product_name'])) {
+    $query .= " AND name LIKE '%" . $conn->real_escape_string($_SESSION['product_name']) . "%'";
 }
-if (!empty($city)) {
-    $query .= " AND city = '" . $city . "'";
+if (!empty($_SESSION['city'])) {
+    $query .= " AND city LIKE '%" . $conn->real_escape_string($_SESSION['city']) . "%'";
 }
-if ($min_quantity > 0) {
-    $query .= " AND quantity >= " . $min_quantity;
+if (!empty($_SESSION['min_quantity'])) {
+    $query .= " AND quantity >= " . intval($_SESSION['min_quantity']);
 }
-if ($max_quantity < PHP_INT_MAX) {
-    $query .= " AND quantity <= " . $max_quantity;
+if (!empty($_SESSION['max_quantity'])) {
+    $query .= " AND quantity <= " . intval($_SESSION['max_quantity']);
 }
-if ($min_price > 0.0) {
-    $query .= " AND price >= " . $min_price;
+if (!empty($_SESSION['min_price'])) {
+    $query .= " AND price >= " . floatval($_SESSION['min_price']);
 }
-if ($max_price < PHP_INT_MAX) {
-    $query .= " AND price <= " . $max_price;
+if (!empty($_SESSION['max_price'])) {
+    $query .= " AND price <= " . floatval($_SESSION['max_price']);
 }
 
 $result = $conn->query($query);
-
-if (!$result) {
-    echo "Error executing query: " . $conn->error;
-} else {
-    if ($result->num_rows > 0) {
-        echo "<table border='1'><tr><th>ID</th><th>Name</th><th>City</th><th>Quantity</th><th>Price</th></tr>";
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr><td>{$row['pid']}</td><td>{$row['name']}</td><td>{$row['city']}</td><td>{$row['quantity']}</td><td>\${$row['price']}</td></tr>";
-        }
-        echo "</table>";
-    } else {
-        echo "No results found.";
+if ($result->num_rows > 0) {
+    echo "<table border='1'><tr><th>ID</th><th>Name</th><th>City</th><th>Quantity</th><th>Price</th></tr>";
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr><td>{$row['pid']}</td><td>{$row['name']}</td><td>{$row['city']}</td><td>{$row['quantity']}</td><td>\${$row['price']}</td></tr>";
     }
+    echo "</table>";
+} else {
+    echo "No results found.";
 }
+
+// Button to perform another search
+echo "<form action='search.php' method='post'>";
+echo "<button type='submit'>Perform Another Search</button>";
+echo "</form>";
 
 $conn->close();
 ?>
