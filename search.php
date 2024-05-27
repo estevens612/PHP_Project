@@ -1,4 +1,5 @@
 <?php
+
 session_start(); // Start the session to handle previous form data
 <input type="text" name="product_name" value="<?php echo isset($_SESSION['product_name']) ? htmlspecialchars($_SESSION['product_name']) : ''; ?>">
 
